@@ -1,0 +1,7 @@
+Description='Static IP config for the NAT network adapter'
+Interface=enp0s3
+Connection=ethernet
+IP=static
+Address=('10.0.2.1/30')
+Gateway='10.0.2.2'
+DNS=('10.51.1.253')
