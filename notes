@@ -3,68 +3,71 @@
 ###############################################################################
 
 -------------------------------------------------------------------------------
-before anything
-host:
-	make ssh key with ssh-keygen
-virtualbox:
-	create the virtual machine
-	2gb ram, 8gb storage
+Before anything
+Host:
+	Make SSH key with ssh-keygen
+VM:
+	Create the virtual machine
+		2gb ram, 8gb storage
 
 -------------------------------------------------------------------------------
-vm initial arch install
-	connected to internet already because dhcpcd
-	test with ping
-	run these commands to partition
+VM initial arch install
+	Connected to internet already because dhcpcd
+	Test with ping
+	Run these commands to partition
 		parted
 		mklabel msdos
 		mkpart primary 1MiB 4250MiB			# root partition, 4.2 gb
 		mkpart primary 4250MiB 6250MiB		# swap partition, 2 gb
 		mkpart primary 6250MiB -1s			# home partition, remaining space
 			(-1s specifies the last sector, `help mkpart` in parted for more)
-	with these values, the command `lsblk` shows the correct sizes
-	run these commands to format them properly
+	With these values, the command `lsblk` shows the correct sizes
+	Run these commands to format them properly
 		mkfs.ext4 /dev/sda1
 		mkfs.ext4 /dev/sda3
 		mkswap /dev/sda2
 		swapon /dev/sda2
-	these commands will mount them properly for installing the system
+	These commands will mount them properly for installing the system
 		mount /dev/sda1 /mnt
 		mkdir /mnt/home
 		mount /dev/sda3 /mnt/home
-	to install the base system with additional important packages, run
+	To install the base system with additional important packages, run
 		pacstrap /mnt base grub sudo openssh
-	generate the filesystem mounting table
+	Generate the filesystem mounting table
 		genfstab -U -p /mnt >> /mnt/etc/fstab
-	chroot for configuring the base system
+	Chroot for configuring the base system
 		arch-chroot /mnt
-	setting locale and timezone
+	Setting locale and timezone
 		vi /etc/locale.gen
 			uncomment line with en_US.UTF-8 UTF-8
 		locale-gen
 		echo LANG=en_US.UTF-8 > /etc/locale.conf
 		export LANG=en_US.UTF-8
 		ln -s /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-	hostname setup
+	Hostname setup
 		echo [your hostname] > /etc/hostname
 		vi /etc/hosts
 			add these lines to the file, filling in [your hostname]
 			#<ip-address>	<hostname>
 			127.0.0.1		localhost
 			127.0.1.1		[your hostname]
-	set root password
+	Set root password
 		passwd
-	set up bootloader
+	Set up bootloader
 		grub-install /dev/sdX
 			just the drive, not a partition
 		grub-mkconfig -o /boot/grub/grub.cfg
 
 THINGS INSTALLED
-	grub sudo openssh
+	base grub sudo openssh
+base:
+	group which contains all packages for the base system
 grub:
 	bootloader
-sudo & openssh:
-	installed here for ease later
-everything else pulled in the "base" group is necessary for the base system.
+sudo:
+	user privelage escalator
+openssh:
+	SSH daemon, for logging into the server from the network
 
 
 ###############################################################################
@@ -119,22 +122,22 @@ https://linux.die.net/man/8/useradd
 • Use sudo, with this user, to be able to perform operation requiring special
 rights.
 
+This step must be done as root.
 Sudo should be installed during the linux setup
 If not, install it with this:
 	pacman -S sudo
-give user sudo access
+Give user sudo access
 	visudo
 		uncomment line 82, or right below the line that says:
 		Uncomment to allow members of group wheel to execute any command
-since the user was added into the wheel group, this gives them sudo access
+Since the user was added into the wheel group, this gives them sudo access
 
 -------------------------------------------------------------------------------
 • We don’t want you to use the DHCP service of your machine. You’ve got to
 configure it to have a static IP and a Netmask in \30.
 
-AS ROOT:
 Create the netctl profile nat-static
-	netctl edit nat-static
+	sudo netctl edit nat-static
 Give it these lines:
 	Description='Static IP config for the NAT network adapter'
 	Interface=enp0s3
@@ -144,12 +147,12 @@ Give it these lines:
 	Gateway='10.0.2.2'
 	DNS=('10.51.1.253')
 Make sure netctl is started
-	systemctl start netctl
+	sudo systemctl start netctl
 Start the profile like this:
-	netctl start nat-static
+	sudo netctl start nat-static
 To have this profile run on startup, do these things
-	systemctl enable netctl
-	netctl enable nat-static
+	sudo systemctl enable netctl
+	sudo netctl enable nat-static
 
 Resources:
 https://wiki.archlinux.org/index.php/Network_configuration
@@ -169,40 +172,42 @@ https://wiki.archlinux.org/index.php/Netctl
 choice. SSH access HAS TO be done with publickeys. SSH root access SHOULD NOT
 be allowed directly, but with a user who can be root.
 
-vm:
-	openssh should be installed during the linux setup
+VM:
+	Openssh should be installed during the linux setup
 	If not, install it with this:
-		pacman -S openssh
-	open /etc/ssh/sshd_config
-		change Port to a number between 1024 and 49151
-			ex. Port 2222
-		change PermitRootLogin to no
-		change PubkeyAuthentication to yes
-	make the ~/.ssh folder
-	start and enable sshd
-		systemctl start sshd
-		systemctl enable sshd
-host:
-	for your vm, go to settings > network
-	make sure the network is set to NAT
-	under advanced, add a port forwarding rule
-		map a port on your host ([host port] from now on) to 2222
-	ssh into the vm to make sure it works:
+		sudo pacman -S openssh
+	Edit the /etc/ssh/sshd_config file
+		sudo vi /etc/ssh/sshd_config
+			change Port to a number between 1024 and 49151
+				ex. Port 2222
+			change PermitRootLogin to no
+			change PubkeyAuthentication to yes
+	Make the ~/.ssh folder
+	Start and enable sshd
+		sudo systemctl start sshd
+		sudo systemctl enable sshd
+Host:
+	For your vm, go to settings > network
+	Make sure the network is set to NAT
+	Under advanced, add a port forwarding rule
+		Map a port on your host ([host port] from now on) to 2222
+	SSH into the vm to make sure it works:
 		ssh alan@localhost -p [host port]
 			(could also use 127.0.0.1 instead of localhost)
-	if it works, scp your public key to the vm's ~/.ssh/authorized_keys file
+	If it works, scp your public key to the vm's ~/.ssh/authorized_keys file
 		scp -P [host port] ~/.ssh/key.pub alan@localhost:~/.ssh/authorized_keys
-vm:
-	open /etc/ssh/sshd_config again
-		change PasswordAuthentication to no
-	restart ssh
-		systemctl restart sshd
-host:
-	ssh into the machine with your private key now
+VM:
+	Edit /etc/ssh/sshd_config again
+		sudo vi /etc/ssh/sshd_config
+			change PasswordAuthentication to no
+	Restart the SSH daemon
+		sudo systemctl restart sshd
+Host:
+	SSH into the machine with your private key now
 		ssh alan@localhost -p [host port] -i ~/.ssh/[privkey]
-	if this works, then you have successfully completed this bullet point
-	you can make an entry in the ~/.ssh/config file for ease later
-	add these lines:
+	If this works, then you have successfully completed this bullet point
+	You can make an entry in the ~/.ssh/config file for ease later
+	Add these lines:
 		## Roger Skyline 1 ##
 		Host roger
 			HostName 127.0.0.1
@@ -220,19 +225,19 @@ services used outside the VM.
 ports of your VM.
 • You have to set a protection against scans on your VM’s open ports.
 
-host:
-	scp the file kernel-settings into the virtual machine
+Host:
+	SCP the file kernel-settings into the virtual machine
 		scp kernel-settings roger:~
-	scp the file ip-tables-rules into the virtual machine
+	SCP the file ip-tables-rules into the virtual machine
 		scp ip-tables-rules roger:~
-vm:
-	to apply the kernel settings
+VM:
+	To apply the kernel settings
 		sudo mv ~/kernel-settings /etc/sysctl.conf
 		sudo sysctl -p
-	to apply the ip-tables-rules
+	To apply the ip-tables-rules
 		sudo sh ~/ip-tables-rules
 		sudo iptables-save -f /etc/iptables/iptables.rules
-	to start and enable iptables:
+	To start and enable iptables:
 		systemctl start iptables
 		systemctl enable iptables
 
@@ -260,18 +265,19 @@ reboots.
 to root if it has been modified. Create a scheduled script task every day at
 midnight.
 
-Add these lines to enable local mail into /etc/postfix/main.cf
-	myhostname = localhost
-	mydomain = localdomain
-	mydestination = $myhostname, localhost.$mydomain, localhost
-	inet_interfaces = $myhostname, localhost
-	mynetworks_style = host
-	default_transport = error: outside mail is not deliverable
-Set up the aliases database
-	sudo postalias /etc/postfix/aliases
-Start and enable postfix
-	sudo systemctl start postfix
-	sudo systemctl enable postfix
+Mail setup
+	Add these lines to enable local mail into /etc/postfix/main.cf
+		myhostname = localhost
+		mydomain = localdomain
+		mydestination = $myhostname, localhost.$mydomain, localhost
+		inet_interfaces = $myhostname, localhost
+		mynetworks_style = host
+		default_transport = error: outside mail is not deliverable
+	Set up the aliases database
+		sudo postalias /etc/postfix/aliases
+	Start and enable postfix
+		sudo systemctl start postfix
+		sudo systemctl enable postfix
 
 Resources:
 https://wiki.archlinux.org/index.php/Postfix#Local_mail
