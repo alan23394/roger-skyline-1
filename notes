@@ -250,6 +250,10 @@ https://javapipe.com/blog/iptables-ddos-protection/
 • Stop the services you don’t need for this project.
 
 There aren't any running/enabled that aren't necessary.
+If there were, you would stop them like this:
+	sudo systemctl stop [servicename]
+If you wanted to stop them from running at startup, you would disable them:
+	sudo systemctl disable [servicename]
 
 Resources:
 https://askubuntu.com/questions/795226/how-to-list-all-enabled-services-from-systemctl
