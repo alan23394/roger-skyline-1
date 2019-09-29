@@ -32,7 +32,7 @@ VM initial arch install
 		mkdir /mnt/home
 		mount /dev/sda3 /mnt/home
 	To install the base system with additional important packages, run
-		pacstrap /mnt base grub sudo openssh
+		pacstrap /mnt base grub sudo openssh cronie
 	Generate the filesystem mounting table
 		genfstab -U -p /mnt >> /mnt/etc/fstab
 	Chroot for configuring the base system
@@ -59,7 +59,7 @@ VM initial arch install
 		grub-mkconfig -o /boot/grub/grub.cfg
 
 THINGS INSTALLED
-	base grub sudo openssh
+	base grub sudo openssh cronie
 base:
 	group which contains all packages for the base system
 grub:
@@ -68,6 +68,8 @@ sudo:
 	user privelage escalator
 openssh:
 	SSH daemon, for logging into the server from the network
+cronie:
+	cronjob daemon, for running scripts at certain times
 
 
 ###############################################################################
@@ -263,6 +265,27 @@ https://askubuntu.com/questions/795226/how-to-list-all-enabled-services-from-sys
 and which logs the whole in a file named /var/log/update_script.log. Create a
 scheduled task for this script once a week at 4AM and every time the machine
 reboots.
+
+VM: Cronie setup
+	Cronie should be installed during the linux setup
+	If not, install it with this:
+		sudo pacman -S cronie
+	Start and enable cronie
+		sudo systemctl start cronie
+		sudo systemctl enable cronie
+	The crontab file takes lines in this format:
+		minute hour day_of_month month day_of_week command
+			minute values are 0-59
+			hour values are 0-23
+			day_of_month values are 1-31
+			month values are 1-12
+			day_of_week values are 0-6, 6 being sunday
+	You can view the crontab entries in two ways:
+		sudo crontab -l
+		sudo cat /var/spool/cron/root
+
+Resources:
+https://wiki.archlinux.org/index.php/Cron
 
 -------------------------------------------------------------------------------
 • Make a script to monitor changes of the /etc/crontab file and sends an email
