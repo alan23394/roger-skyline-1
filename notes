@@ -116,6 +116,20 @@ Create a new user with the command:
 Set their password with this:
 	passwd (username)
 
+As an additional fun customization (not required for this project), let's make
+our user account a bit more pretty.
+First, switch to our new user:
+	su (username)
+Clone ptheme, a (my) bash prompt theme tool
+	git clone https://github.com/alanbarnett/ptheme ~/bin/ptheme
+Make sure to clone it into the ~/bin/ptheme folder to avoid changing configs.
+Replace PS1 config in our bashrc with ptheme:
+	vi ~/.bashrc
+		comment out the line that sets the PS1 variable
+		below it, add this line:
+			source ~/bin/ptheme/prompt_alan.sh
+Then, if you restart your shell in some way, you'll see a nice prompt!
+
 Resources:
 https://wiki.archlinux.org/index.php/Users_and_groups#Group_list
 https://linux.die.net/man/8/useradd
