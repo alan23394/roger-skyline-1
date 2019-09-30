@@ -330,3 +330,97 @@ VM:
 Resources:
 https://wiki.archlinux.org/index.php/Postfix#Local_mail
 https://wiki.archlinux.org/index.php/Postfix#Aliases
+
+
+###############################################################################
+### Optional Part
+###############################################################################
+
+### 1. Web Part
+
+-------------------------------------------------------------------------------
+• You have to set a web server who should BE available on the VM’s IP or a host
+(init.login.com for example). About the packages of your web server, you can
+choose between Nginx and Apache.
+
+I chose Apache. It will use a port on my VM, and use the same IP as the VM
+itself. I would set it up with a name, but I would need to change the hosts
+file on the mac, which I am not authorized to do.
+
+Download apache
+	sudo pacman -S apache
+Do the next step before starting and enabling httpd to set up openssl
+
+-------------------------------------------------------------------------------
+• You have to set a self-signed SSL on all of your services.
+
+Open the apache httpd config file
+	sudo vi /etc/httpd/conf/httpd.conf
+		Uncomment the following lines
+			LoadModule ssl_module modules/mod_ssl.so
+			LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+			Include conf/extra/httpd-ssl.conf
+Create a self-signed ssl certificate
+	sudo openssl req \
+	-subj "/C=US/ST=California/L=Fremont/O=42School/OU=RogerSkyline/CN=roger.skyline.com" \
+	-nodes -newkey rsa:4096 -keyout /etc/httpd/conf/server.key \
+	-x509 -out /etc/httpd/conf/server.crt
+Change permissions on the key to make it private and not writable
+	sudo chmod 400 /etc/httpd/conf/server.key
+
+Start the apache httpd service
+	sudo systemctl start httpd
+	sudo systemctl enable httpd
+
+On your host machine, add a port forwarding rule
+	In virtualbox, go to settings > network for your vm
+	Under advanced, add a port forwarding rule
+		Map [host port] to 443 (the same port rules apply from before)
+	Now, open your browser and go to https://localhost:[host port]
+
+Resources:
+https://wiki.archlinux.org/index.php/Apache_HTTP_Server
+https://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl
+
+-------------------------------------------------------------------------------
+• You have to set a web "application" from those choices:
+- A login page.
+- A display site.
+- A wonderful website that blow our minds.
+The web-app COULD be written with any language you want.
+
+I chose to set up a "startpage", which is a custom new tab page that has your
+own bookmarks and search bar, or anything you want really. I didn't write one
+myself, I forked a popular keyboard-driven one called "tilde", and made my own
+changes to add the websites and shortcuts I want, and I changed the default
+colors. It's written in HTML/JS/CSS.
+
+Clone the tilde fork into the http folder
+	sudo git clone https://github.com/alanbarnett/tilde /srv/http
+
+### 2. Deployment Part
+
+-------------------------------------------------------------------------------
+• Propose a functional solution for deployment automation.
+
+There are two options I've found that I like: archiso, and ansible.
+
+archiso:
+	Uses a profile to easily store your config
+	Installs packages from a list that you specify
+	Has an overlay root filesystem to copy any files into the final image
+It allows you to set up your system in a "profile" directory, and then you
+build an image based on the instructions in there. Once the profile is set up,
+all you need to do is build it and it will create a disk image of the system.
+
+ansible:
+	Easy to configure "playbooks" that build a system
+	Minimal, doesn't require many dependencies other than Python and OpenSSH
+	Reliable and simple
+Ansible is a more general-purpose system configuration tool. It would be a good
+choice for deployment automation.
+
+Resources:
+https://wiki.archlinux.org/index.php/Archiso
+https://en.wikipedia.org/wiki/Ansible_(software)
+https://wiki.archlinux.org/index.php/Ansible
