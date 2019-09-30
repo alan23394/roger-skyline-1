@@ -138,7 +138,8 @@ https://linux.die.net/man/8/useradd
 • Use sudo, with this user, to be able to perform operation requiring special
 rights.
 
-This step must be done as root.
+NOTE: This step must be done as root.
+
 Sudo should be installed during the linux setup
 If not, install it with this:
 	pacman -S sudo
@@ -322,7 +323,7 @@ https://wiki.archlinux.org/index.php/Cron
 to root if it has been modified. Create a scheduled script task every day at
 midnight.
 
-Mail setup
+VM: Mail setup
 	Add these lines to enable local mail into /etc/postfix/main.cf
 		myhostname = localhost
 		mydomain = localdomain
