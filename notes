@@ -174,6 +174,11 @@ https://wiki.archlinux.org/index.php/Netctl
 choice. SSH access HAS TO be done with publickeys. SSH root access SHOULD NOT
 be allowed directly, but with a user who can be root.
 
+For this section, I assume the sshd port on the VM is 2222, and the port
+you forward on your host is 8022. Ports can be between 1024 and 49151, less
+than that is reserved and greater than that (up to 65535) aren't really
+supposed to be used for services.
+
 VM:
 	Openssh should be installed during the linux setup
 	If not, install it with this:
@@ -189,15 +194,15 @@ VM:
 		sudo systemctl start sshd
 		sudo systemctl enable sshd
 Host:
-	For your vm, go to settings > network
+	In virtualbox, go to settings > network for your vm
 	Make sure the network is set to NAT
 	Under advanced, add a port forwarding rule
-		Map a port on your host ([host port] from now on) to 2222
+		Map 8022 to 2222
 	SSH into the vm to make sure it works:
-		ssh alan@localhost -p [host port]
+		ssh alan@localhost -p 8022
 			(could also use 127.0.0.1 instead of localhost)
 	If it works, scp your public key to the vm's ~/.ssh/authorized_keys file
-		scp -P [host port] ~/.ssh/key.pub alan@localhost:~/.ssh/authorized_keys
+		scp -P 8022 ~/.ssh/key.pub alan@localhost:~/.ssh/authorized_keys
 VM:
 	Edit /etc/ssh/sshd_config again
 		sudo vi /etc/ssh/sshd_config
@@ -206,7 +211,7 @@ VM:
 		sudo systemctl restart sshd
 Host:
 	SSH into the machine with your private key now
-		ssh alan@localhost -p [host port] -i ~/.ssh/[privkey]
+		ssh alan@localhost -p 8022 -i ~/.ssh/[privkey]
 	If this works, then you have successfully completed this bullet point
 	You can make an entry in the ~/.ssh/config file for ease later
 	Add these lines:
@@ -214,8 +219,8 @@ Host:
 		Host roger
 			HostName 127.0.0.1
 			User [vm username]
-			Port [host port]
-			IdentityFile ~/.ssh/rogerskyline
+			Port 8022
+			IdentityFile ~/.ssh/[privkey]
 
 Resources:
 https://en.wikipedia.org/wiki/Port_(computer_networking)
