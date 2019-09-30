@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# This script will create a file /etc/crontab.md5 with the checksum of the
+# crontab file in it. If that file exists, it will compare the hash of the
+# current crontab file with it, and if they differ, it sends a mail to root and
+# updates the /etc/crontab.md5 file.
+
+# Quit if we aren't the root user
+[ $(id -u) != "0" ] && exit
+
+# Quit if there is no crontab file
+[ ! -f /etc/crontab ] && exit
+
+if [ ! -f /etc/crontab.md5 ]; then
+	md5sum /etc/crontab > /etc/crontab.md5
+fi
+
+if [ -n "$(md5sum /etc/crontab | diff - /etc/crontab.md5)" ]; then
+	echo "Crontab file modified!" | mail -s \
+		"There was a change detected in the crontab file!" root
+	md5sum /etc/crontab > /etc/crontab.md5
+fi

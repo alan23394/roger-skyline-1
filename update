@@ -1,0 +1,10 @@
+#!/bin/sh
+
+LOG_FILE="/var/log/update_script.log"
+
+for _ in {1..10}; do
+	[ -z "$(ip addr show dev enp0s3 | grep inet)" ] && sleep 1
+done
+
+echo "---------------  New Update! -- $(date)  ---------------" >> $LOG_FILE
+pacman -Syu --noconfirm >> $LOG_FILE 2>&1 &

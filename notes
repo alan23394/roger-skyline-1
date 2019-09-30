@@ -283,6 +283,17 @@ VM: Cronie setup
 	You can view the crontab entries in two ways:
 		sudo crontab -l
 		sudo cat /var/spool/cron/root
+Host:
+	SCP in the update_script.sh script to the virtual machine
+		scp update roger:~
+VM:
+	Move the script to the /usr/local/bin folder
+		sudo mv ~/update /usr/local/bin
+	Use the crontab program to add an entry
+		sudo crontab -e
+	Add these lines to the file:
+		0 4 * * 3 update
+		@reboot update
 
 Resources:
 https://wiki.archlinux.org/index.php/Cron
@@ -305,6 +316,16 @@ Mail setup
 	Start and enable postfix
 		sudo systemctl start postfix
 		sudo systemctl enable postfix
+Host:
+	SCP the check_crontab_changed script into the virtual machine
+		scp check_crontab_changed roger:~
+VM:
+	Move the check_crontab_changed script into the /usr/local/bin folder
+		sudo mv ~/check_crontab_changed /usr/local/bin
+	Use the crontab program to add an entry
+		sudo crontab -e
+	Add these lines to the file:
+		0 0 * * * check_crontab_changed
 
 Resources:
 https://wiki.archlinux.org/index.php/Postfix#Local_mail
