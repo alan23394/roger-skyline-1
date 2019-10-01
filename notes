@@ -423,9 +423,9 @@ Clone the tilde fork into the http folder
 -------------------------------------------------------------------------------
 • Propose a functional solution for deployment automation.
 
-There are two options I've found that I like: archiso, and ansible.
+I've found three solutions that I like: Archiso, Ansible, and VBoxManage.
 
-archiso:
+Archiso:
 	Uses a profile to easily store your config
 	Installs packages from a list that you specify
 	Has an overlay root filesystem to copy any files into the final image
@@ -433,14 +433,25 @@ It allows you to set up your system in a "profile" directory, and then you
 build an image based on the instructions in there. Once the profile is set up,
 all you need to do is build it and it will create a disk image of the system.
 
-ansible:
+Ansible:
 	Easy to configure "playbooks" that build a system
 	Minimal, doesn't require many dependencies other than Python and OpenSSH
 	Reliable and simple
 Ansible is a more general-purpose system configuration tool. It would be a good
 choice for deployment automation.
 
+VBoxManage:
+	Commands to control nearly every aspect of a VirtualBox machine
+	Very scriptable, the commands are pretty clear too
+	Extensive help on each sub-command
+VBoxManage can be used to do nearly everything that the other things can do,
+but each thing is an individual command that can be used in a regular shell
+script. You need to install the VirtualBox guest additions on the machine to be
+able to do some things that involve controlling the machine directly however,
+like running programs inside it.
+
 Resources:
 https://wiki.archlinux.org/index.php/Archiso
 https://en.wikipedia.org/wiki/Ansible_(software)
 https://wiki.archlinux.org/index.php/Ansible
+https://superuser.com/questions/434696/run-commands-on-a-virtualbox-vm-from-outside
